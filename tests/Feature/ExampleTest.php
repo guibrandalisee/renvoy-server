@@ -16,4 +16,12 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(200);
     }
+
+    public function test_privacy_policy_is_publicly_available(): void
+    {
+        $this->get('/privacy')
+            ->assertOk()
+            ->assertSee('Privacy Policy')
+            ->assertSee('local-first');
+    }
 }
