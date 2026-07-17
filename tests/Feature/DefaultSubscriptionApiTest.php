@@ -56,6 +56,30 @@ class DefaultSubscriptionApiTest extends TestCase
             ->assertJsonMissing(['slug' => 'netflix']);
     }
 
+    public function test_every_seeded_subscription_has_an_icon(): void
+    {
+        $subscriptions = DefaultSubscription::query()->get(['slug', 'icon_slug']);
+
+        $this->assertGreaterThanOrEqual(100, $subscriptions->count());
+        foreach ($subscriptions as $subscription) {
+            $this->assertNotNull($subscription->icon_slug, "Missing icon for [{$subscription->slug}].");
+            $this->assertNotSame('', trim($subscription->icon_slug), "Empty icon for [{$subscription->slug}].");
+            $this->assertStringNotContainsString('app:', $subscription->icon_slug);
+            $this->assertNotSame('asset:unknown', $subscription->icon_slug);
+        }
+    }
+
+    public function test_it_includes_the_expanded_subscription_catalog(): void
+    {
+        $this->getJson('/api/v1/default-subscriptions')
+            ->assertOk()
+            ->assertJsonFragment(['slug' => 'globoplay', 'icon_slug' => 'asset:globoplay'])
+            ->assertJsonFragment(['slug' => 'google-workspace', 'icon_slug' => 'google'])
+            ->assertJsonFragment(['slug' => 'perplexity-pro', 'icon_slug' => 'perplexity'])
+            ->assertJsonFragment(['slug' => 'bitwarden-premium', 'icon_slug' => 'bitwarden'])
+            ->assertJsonFragment(['slug' => 'apple-news-plus', 'icon_slug' => 'applenews']);
+    }
+
     public function test_the_route_is_public(): void
     {
         $this->getJson('/api/v1/default-subscriptions')->assertOk();
